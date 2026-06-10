@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Pragma Status</title>
     <link rel="preload" href="assets/status-bg.webp" as="image" />
-    <link rel="stylesheet" href="styles.css?v=20260611-guide1" />
+    <link rel="stylesheet" href="styles.css?v=20260611-pool1" />
   </head>
   <body>
     <main class="shell">
@@ -137,8 +137,43 @@
             </table>
           </div>
           <p class="guide-note">
-            绑定出口为<strong>偏慢</strong>时，对应卡片会从「正常」降为「降级」；为<strong>严重 / 失败</strong>时，卡片降为「异常」。
+            卡片只展示<strong>当前绑定</strong>的那一个出口；四级状态文案与颜色与 ops 一致。卡片降级规则见下一节。
           </p>
+        </article>
+
+        <article class="guide-block">
+          <h3>出口IP 如何影响卡片颜色</h3>
+          <p>
+            展示仍只看绑定出口，但<strong>降级判定会参考代理池</strong>：若绑定节点失败/严重，而池中其他出口仍正常或偏慢，卡片降为「降级」（黄），表示可能已 failover；若池中已无健康出口，才降为「异常」（红）。
+          </p>
+          <div class="guide-table-wrap">
+            <table class="guide-table">
+              <thead>
+                <tr>
+                  <th>绑定出口状态</th>
+                  <th>代理池其他出口</th>
+                  <th>卡片变化</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>偏慢</td>
+                  <td>任意</td>
+                  <td>正常 → 降级</td>
+                </tr>
+                <tr>
+                  <td>失败 / 严重</td>
+                  <td>仍有正常或偏慢</td>
+                  <td>正常 → 降级</td>
+                </tr>
+                <tr>
+                  <td>失败 / 严重</td>
+                  <td>无健康出口</td>
+                  <td>正常 → 异常</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </article>
 
         <article class="guide-block">
@@ -181,9 +216,14 @@
                   <td>对应卡变黄（即使本站 chat 探测仍绿）</td>
                 </tr>
                 <tr>
-                  <td>仅本地代理 / 出口问题</td>
+                  <td>仅绑定出口故障、池内另有健康出口</td>
                   <td>不显示</td>
-                  <td>看卡片「出口IP」区与卡片状态</td>
+                  <td>卡片降级（黄）；出口IP 区显示绑定节点失败/严重</td>
+                </tr>
+                <tr>
+                  <td>全部代理出口不可用</td>
+                  <td>不显示</td>
+                  <td>卡片异常（红）</td>
                 </tr>
               </tbody>
             </table>
@@ -263,6 +303,10 @@
                   <td>顶部「VPS 离线」横幅 + Upptime 外部探测降级</td>
                 </tr>
                 <tr>
+                  <td>同步脚本是否在跑</td>
+                  <td>Kuma Push 监控 <code>proxy-health-sync</code>（cron 每分钟心跳）</td>
+                </tr>
+                <tr>
                   <td>查看原始探针 / 改 monitor</td>
                   <td><a href="https://status-admin.academic-ruc.cc/dashboard">管理后台</a>（Uptime Kuma）</td>
                 </tr>
@@ -270,8 +314,8 @@
             </table>
           </div>
           <p class="guide-note">
-            本页聚合六层监控：Kuma 内网探针、ops 代理测速、官方状态 API、Upptime 外部 GET 探测、Cloudflare Worker
-            边缘降级、Telegram 告警。用户入口统一为
+            本页聚合六层监控：Kuma 内网探针、ops 代理测速（含 Push 存活监控）、官方状态 API、Upptime 外部 GET
+            探测、Cloudflare Worker 边缘降级、Telegram 告警。用户入口统一为
             <code>https://status.academic-ruc.cc</code>。
           </p>
         </article>
@@ -324,6 +368,6 @@
       </article>
     </template>
 
-    <script src="app.js?v=20260611-guide1" defer></script>
+    <script src="app.js?v=20260611-pool1" defer></script>
   </body>
 </html>
