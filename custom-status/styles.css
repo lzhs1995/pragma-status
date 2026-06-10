@@ -269,6 +269,17 @@ h1 {
   cursor: pointer;
 }
 
+.stale-banner {
+  margin-bottom: 22px;
+  padding: 16px 18px;
+  border: 1px solid rgba(255, 140, 0, 0.45);
+  border-radius: 14px;
+  color: #ffb347;
+  background: rgba(255, 140, 0, 0.12);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
 .notice {
   margin-bottom: 22px;
   padding: 16px 18px;

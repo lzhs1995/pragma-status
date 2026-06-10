@@ -29,6 +29,7 @@ const normalCount = document.querySelector("#normal-count");
 const totalCount = document.querySelector("#total-count");
 const overall = document.querySelector("#overall");
 const notice = document.querySelector("#notice");
+const staleBanner = document.querySelector("#stale-banner");
 const pollLabel = document.querySelector("#poll-label");
 
 function formatMs(value) {
@@ -101,10 +102,34 @@ function proxyNodeClass(success) {
   return "proxy-node-unknown";
 }
 
-function renderProxyHealth(container, proxyHealth) {
+function renderStaleBanner(data) {
+  if (!staleBanner) return;
+  if (data.stale) {
+    staleBanner.classList.remove("hidden");
+    staleBanner.textContent =
+      data.staleMessage || "VPS 离线，节点明细暂停更新，下方为外部基础设施探测";
+    return;
+  }
+  staleBanner.classList.add("hidden");
+  staleBanner.textContent = "";
+}
+
+function renderProxyHealth(container, proxyHealth, isStale = false) {
   const block = container.querySelector(".proxy-health");
   const nodesEl = container.querySelector(".proxy-nodes");
   if (!block || !nodesEl) return;
+
+  if (isStale || proxyHealth?.available === false) {
+    block.classList.remove("hidden");
+    const labelEl = block.querySelector(".proxy-health-label");
+    if (labelEl) labelEl.textContent = "绑定出口";
+    nodesEl.replaceChildren();
+    const item = document.createElement("span");
+    item.className = "proxy-node proxy-node-unknown";
+    item.textContent = "节点明细暂不可用";
+    nodesEl.appendChild(item);
+    return;
+  }
 
   const proxies = proxyHealth && Array.isArray(proxyHealth.proxies) ? proxyHealth.proxies : [];
   if (!proxies.length) {
@@ -133,7 +158,7 @@ function renderProxyHealth(container, proxyHealth) {
   );
 }
 
-function renderCard(card) {
+function renderCard(card, isStale = false) {
   const node = template.content.firstElementChild.cloneNode(true);
   const stateMeta = stateLabels[card.status] || stateLabels.unknown;
   node.querySelector("h2").textContent = card.title;
@@ -159,7 +184,7 @@ function renderCard(card) {
     bar.className = `bar ${barClass(status)}`;
     bars.appendChild(bar);
   });
-  renderProxyHealth(node, card.proxyHealth);
+  renderProxyHealth(node, card.proxyHealth, isStale);
   return node;
 }
 
@@ -176,8 +201,14 @@ function render(data) {
   normalCount.textContent = `${data.normalCount} 正常`;
   totalCount.textContent = `${data.totalCount} 个配置`;
   updatedAt.textContent = formatUpdatedAt(data.generatedAt);
-  renderNotice(data.cards || []);
-  cardsEl.replaceChildren(...(data.cards || []).map(renderCard));
+  renderStaleBanner(data);
+  if (data.stale) {
+    notice.classList.add("hidden");
+    notice.textContent = "";
+  } else {
+    renderNotice(data.cards || []);
+  }
+  cardsEl.replaceChildren(...(data.cards || []).map((card) => renderCard(card, Boolean(data.stale))));
   updateCountdown();
 }
 

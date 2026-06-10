@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Pragma Status</title>
     <link rel="preload" href="assets/status-bg.webp" as="image" />
-    <link rel="stylesheet" href="styles.css?v=20260610-pages-relative1" />
+    <link rel="stylesheet" href="styles.css?v=20260610-phase3-stale1" />
   </head>
   <body>
     <main class="shell">
       <nav class="top-actions" aria-label="页面入口">
         <a class="back-link" href="https://academic-ruc.cc/">‹ 返回总首页</a>
-        <a class="admin-link" href="/dashboard" title="管理员登录后进入 Uptime Kuma 后台">管理后台</a>
+        <a class="admin-link" href="https://status-admin.academic-ruc.cc/dashboard" title="管理员登录后进入 Uptime Kuma 后台">管理后台</a>
       </nav>
 
       <section class="hero" aria-label="服务状态总览">
@@ -55,6 +55,7 @@
         </div>
       </section>
 
+      <section id="stale-banner" class="stale-banner hidden" aria-live="assertive"></section>
       <section id="notice" class="notice hidden" aria-live="polite"></section>
       <section id="cards" class="cards" aria-live="polite"></section>
     </main>
@@ -105,6 +106,6 @@
       </article>
     </template>
 
-    <script src="app.js?v=20260610-pages-relative1" defer></script>
+    <script src="app.js?v=20260610-phase3-stale1" defer></script>
   </body>
 </html>
