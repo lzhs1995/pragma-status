@@ -96,10 +96,30 @@ function renderNotice(cards) {
     .join(" · ");
 }
 
-function proxyNodeClass(success) {
-  if (success === true) return "proxy-node-ok";
-  if (success === false) return "proxy-node-fail";
+const proxyLevelClasses = {
+  normal: "proxy-node-ok",
+  slow: "proxy-node-slow",
+  severe: "proxy-node-severe",
+  failed: "proxy-node-fail",
+};
+
+function proxyNodeClass(proxy) {
+  const level = proxy && proxy.level ? String(proxy.level) : "";
+  if (level && proxyLevelClasses[level]) return proxyLevelClasses[level];
+  if (proxy?.success === true) return "proxy-node-ok";
+  if (proxy?.success === false) return "proxy-node-fail";
   return "proxy-node-unknown";
+}
+
+function proxyLatencyMs(proxy) {
+  if (!proxy) return null;
+  if (proxy.ttfbMs !== null && proxy.ttfbMs !== undefined && !Number.isNaN(Number(proxy.ttfbMs))) {
+    return Math.round(Number(proxy.ttfbMs));
+  }
+  if (proxy.totalMs !== null && proxy.totalMs !== undefined && !Number.isNaN(Number(proxy.totalMs))) {
+    return Math.round(Number(proxy.totalMs));
+  }
+  return null;
 }
 
 function renderStaleBanner(data) {
@@ -122,7 +142,7 @@ function renderProxyHealth(container, proxyHealth, isStale = false) {
   if (isStale || proxyHealth?.available === false) {
     block.classList.remove("hidden");
     const labelEl = block.querySelector(".proxy-health-label");
-    if (labelEl) labelEl.textContent = "绑定出口";
+    if (labelEl) labelEl.textContent = "出口IP";
     nodesEl.replaceChildren();
     const item = document.createElement("span");
     item.className = "proxy-node proxy-node-unknown";
@@ -142,16 +162,17 @@ function renderProxyHealth(container, proxyHealth, isStale = false) {
   const boundProxy = proxyHealth.boundProxy ? String(proxyHealth.boundProxy) : "";
   const labelEl = block.querySelector(".proxy-health-label");
   if (labelEl) {
-    labelEl.textContent = boundProxy ? `绑定出口 · ${boundProxy.replace(/^kookeey-/, "")}` : "绑定出口";
+    labelEl.textContent = boundProxy ? `出口IP · ${boundProxy}` : "出口IP";
   }
   nodesEl.replaceChildren(
     ...proxies.map((proxy) => {
       const item = document.createElement("span");
-      const shortName = String(proxy.name || "").replace(/^kookeey-/, "");
-      const totalMs =
-        proxy.totalMs === null || proxy.totalMs === undefined ? "--" : `${Math.round(proxy.totalMs)}ms`;
-      item.className = `proxy-node ${proxyNodeClass(proxy.success)}`;
-      item.textContent = `${shortName}: ${proxy.success ? "正常" : "异常"} (${totalMs})`;
+      const proxyName = String(proxy.name || boundProxy || "未知节点");
+      const levelLabel = proxy.levelLabel || (proxy.success ? "正常" : "失败");
+      const latency = proxyLatencyMs(proxy);
+      const latencyText = latency === null ? "--" : `${latency}ms`;
+      item.className = `proxy-node ${proxyNodeClass(proxy)}`;
+      item.textContent = `${proxyName}: ${levelLabel} (${latencyText})`;
       item.title = proxy.errorMessage || proxyHealth.detail || "";
       return item;
     }),

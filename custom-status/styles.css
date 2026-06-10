@@ -452,6 +452,16 @@ h1 {
   background: var(--green-soft);
 }
 
+.proxy-node-slow {
+  color: #f5a623;
+  background: rgba(245, 166, 35, 0.14);
+}
+
+.proxy-node-severe {
+  color: #ff6b6b;
+  background: rgba(255, 107, 107, 0.14);
+}
+
 .proxy-node-fail {
   color: var(--red);
   background: var(--red-soft);
