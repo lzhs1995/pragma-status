@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Pragma Status</title>
     <link rel="preload" href="assets/status-bg.webp" as="image" />
-    <link rel="stylesheet" href="styles.css?v=20260611-notice1" />
+    <link rel="stylesheet" href="styles.css?v=20260611-guide1" />
   </head>
   <body>
     <main class="shell">
@@ -58,6 +58,224 @@
       <section id="stale-banner" class="stale-banner hidden" aria-live="assertive"></section>
       <section id="notice" class="notice hidden" aria-live="polite"></section>
       <section id="cards" class="cards" aria-live="polite"></section>
+
+      <section class="metrics-guide" aria-label="指标说明">
+        <header class="metrics-guide-head">
+          <h2>指标说明</h2>
+          <p>帮助区分「本站服务」「代理出口」「上游官方」三层状态，避免把不同来源的指标混为一谈。</p>
+        </header>
+
+        <article class="guide-block">
+          <h3>出口IP</h3>
+          <p>
+            每张 OpenAI / Gemini 卡片下方展示该分组当前绑定的代理出口，名称来自
+            <code>proxies.name</code>，与
+            <a href="https://pragma.academic-ruc.cc/admin/proxies">管理后台代理库</a>
+            及 <code>/apps/proxies</code> 中看到的名称一致（完整显示，如 <code>kookeey-US-1</code>）。
+          </p>
+          <div class="guide-table-wrap">
+            <table class="guide-table">
+              <thead>
+                <tr>
+                  <th>展示项</th>
+                  <th>含义</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>出口IP · 代理名</td>
+                  <td>该分组账号当前绑定的 SOCKS 出口</td>
+                </tr>
+                <tr>
+                  <td>括号内毫秒</td>
+                  <td>优先显示 TTFB（首字节时间），与 ops 测速表一致</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="guide-note">
+            数据链路：sub2api 每 5 分钟写入 <code>ops_proxy_probe_results</code> → VPS cron 每分钟同步为
+            <code>proxy-health.json</code> → status-view 按分组绑定切片 → 页面每 60 秒轮询展示。与
+            <a href="https://pragma.academic-ruc.cc/admin/ops">/admin/ops 代理节点测速</a>
+            同源同表，最多约 1 分钟延迟；ops 展示全部活跃代理，status 卡片只展示该分组绑定的那一个。
+          </p>
+        </article>
+
+        <article class="guide-block">
+          <h3>出口IP 四级状态（与 ops 对齐）</h3>
+          <div class="guide-table-wrap">
+            <table class="guide-table">
+              <thead>
+                <tr>
+                  <th>状态</th>
+                  <th>判定条件</th>
+                  <th>颜色</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>正常</td>
+                  <td>探测成功，且 TTFB &lt; 1200 ms</td>
+                  <td>绿色</td>
+                </tr>
+                <tr>
+                  <td>偏慢</td>
+                  <td>探测成功，且 1200 ms ≤ TTFB ≤ 3000 ms</td>
+                  <td>琥珀色</td>
+                </tr>
+                <tr>
+                  <td>严重</td>
+                  <td>探测成功但 TTFB &gt; 3000 ms，或缺少 TTFB 样本</td>
+                  <td>红色</td>
+                </tr>
+                <tr>
+                  <td>失败</td>
+                  <td>探测未成功（链路不可达或超时）</td>
+                  <td>红色</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="guide-note">
+            绑定出口为<strong>偏慢</strong>时，对应卡片会从「正常」降为「降级」；为<strong>严重 / 失败</strong>时，卡片降为「异常」。
+          </p>
+        </article>
+
+        <article class="guide-block">
+          <h3>卡片「正常 / 降级 / 异常」</h3>
+          <p>综合 Uptime Kuma 心跳、对话延迟、端点 PING、可用率、上游官方状态与出口IP健康，按优先级判定：</p>
+          <ol class="guide-list">
+            <li>无最新主心跳 → 未知</li>
+            <li>主心跳 Down，或对话延迟 &gt; 15 s，或端点 PING &gt; 2 s → 异常</li>
+            <li>OpenAI / Gemini 官方降级，或主心跳非 Up，或对话延迟 ≥ 5 s，或端点 PING ≥ 500 ms，或可用率 &lt; 99% → 降级</li>
+            <li>其余 → 正常</li>
+          </ol>
+          <p class="guide-note">
+            仅 <code>openai-default</code> / <code>gemini-default</code> 会叠加出口IP判定；出口数据超过 15 分钟未更新时不改卡片状态，避免误报。
+          </p>
+        </article>
+
+        <article class="guide-block">
+          <h3>上游官方状态横幅</h3>
+          <p>
+            仅当 OpenAI 或 Gemini <strong>官方发生事故</strong>时，卡片区上方会出现黄色提示条（平时隐藏，避免与卡片状态重复）。
+          </p>
+          <div class="guide-table-wrap">
+            <table class="guide-table">
+              <thead>
+                <tr>
+                  <th>场景</th>
+                  <th>横幅</th>
+                  <th>卡片</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>上游无事故</td>
+                  <td>不显示</td>
+                  <td>不因官方状态降级</td>
+                </tr>
+                <tr>
+                  <td>OpenAI / Gemini 官方事故</td>
+                  <td>显示事故说明</td>
+                  <td>对应卡变黄（即使本站 chat 探测仍绿）</td>
+                </tr>
+                <tr>
+                  <td>仅本地代理 / 出口问题</td>
+                  <td>不显示</td>
+                  <td>看卡片「出口IP」区与卡片状态</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="guide-note">
+            数据来源：OpenAI <code>status.openai.com</code> 状态 API；Gemini Google Cloud
+            <code>incidents.json</code> 中未结束的 Gemini / Vertex 事故。
+          </p>
+        </article>
+
+        <article class="guide-block">
+          <h3>卡片内其他指标</h3>
+          <div class="guide-table-wrap">
+            <table class="guide-table">
+              <thead>
+                <tr>
+                  <th>指标</th>
+                  <th>来源</th>
+                  <th>说明</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>对话延迟</td>
+                  <td>Kuma chat probe</td>
+                  <td>真实 POST 对话探测耗时（OpenAI 600 s / Gemini 600 s 周期，低端模型）</td>
+                </tr>
+                <tr>
+                  <td>端点 PING</td>
+                  <td>Kuma GET /v1/models</td>
+                  <td>端点可达性与响应时间（60 s 周期）</td>
+                </tr>
+                <tr>
+                  <td>可用性</td>
+                  <td>Kuma 窗口统计</td>
+                  <td>所选 7 / 15 / 30 天内主探测成功率</td>
+                </tr>
+                <tr>
+                  <td>HISTORY (60PTS)</td>
+                  <td>Kuma 最近 60 条样本</td>
+                  <td>绿=成功，黄=降级，红=失败，灰=未知</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="guide-block">
+          <h3>24/7 监控如何分工</h3>
+          <div class="guide-table-wrap">
+            <table class="guide-table">
+              <thead>
+                <tr>
+                  <th>你想确认的问题</th>
+                  <th>看哪里</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>服务整体能否对话</td>
+                  <td>卡片状态 + 对话延迟 + 可用率</td>
+                </tr>
+                <tr>
+                  <td>API 端点是否通</td>
+                  <td>端点 PING</td>
+                </tr>
+                <tr>
+                  <td>哪个代理出口坏了 / 变慢</td>
+                  <td>出口IP 四级状态</td>
+                </tr>
+                <tr>
+                  <td>上游 OpenAI / Gemini 是否官方事故</td>
+                  <td>官方降级横幅（有事故时才出现）</td>
+                </tr>
+                <tr>
+                  <td>VPS 宕机后页面是否还能打开</td>
+                  <td>顶部「VPS 离线」横幅 + Upptime 外部探测降级</td>
+                </tr>
+                <tr>
+                  <td>查看原始探针 / 改 monitor</td>
+                  <td><a href="https://status-admin.academic-ruc.cc/dashboard">管理后台</a>（Uptime Kuma）</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="guide-note">
+            本页聚合六层监控：Kuma 内网探针、ops 代理测速、官方状态 API、Upptime 外部 GET 探测、Cloudflare Worker
+            边缘降级、Telegram 告警。用户入口统一为
+            <code>https://status.academic-ruc.cc</code>。
+          </p>
+        </article>
+      </section>
     </main>
 
     <template id="card-template">
@@ -106,6 +324,6 @@
       </article>
     </template>
 
-    <script src="app.js?v=20260611-notice1" defer></script>
+    <script src="app.js?v=20260611-guide1" defer></script>
   </body>
 </html>
