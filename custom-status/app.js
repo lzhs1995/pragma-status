@@ -76,21 +76,19 @@ function barClass(status) {
 }
 
 function renderNotice(cards) {
-  const upstreamOfficials = cards.filter(
-    (card) => card.official && ["OpenAI", "Gemini"].includes(card.official.provider),
+  const degradedOfficials = cards.filter(
+    (card) =>
+      card.official &&
+      ["OpenAI", "Gemini"].includes(card.official.provider) &&
+      card.official.state === "degraded",
   );
-  const degradedOfficials = upstreamOfficials.filter(
-    (card) => card.official.state === "degraded",
-  );
-  notice.classList.remove("hidden", "ok");
   if (!degradedOfficials.length) {
-    notice.classList.add("ok");
-    const statusText = upstreamOfficials
-      .map((card) => `${card.official.provider} ${card.official.label}`)
-      .join(" · ");
-    notice.textContent = `官方降级：无 · ${statusText || "上游状态暂无数据"}`;
+    notice.classList.add("hidden");
+    notice.classList.remove("ok");
+    notice.textContent = "";
     return;
   }
+  notice.classList.remove("hidden", "ok");
   notice.textContent = degradedOfficials
     .map((card) => `${card.title} 官方降级：${card.official.detail || card.official.label}`)
     .join(" · ");
