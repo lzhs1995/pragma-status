@@ -1,0 +1,38 @@
+# Deploy Packy custom-status shell to gh-pages alongside Upptime (Phase 2.5)
+# Does not overwrite Upptime's status-page export — merges into custom-status/
+
+name: Deploy custom-status
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - "custom-status/**"
+      - ".github/workflows/deploy-custom-status.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: deploy-custom-status
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Merge custom-status into gh-pages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+
+      - name: Deploy custom-status folder
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: custom-status
+          target-folder: custom-status
+          clean: false
+          commit-message: "deploy: custom-status Packy shell [skip ci]"
