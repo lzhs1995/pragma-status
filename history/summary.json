@@ -94,17 +94,17 @@
     "url": "https://lzhs1995.github.io/pragma-status/custom-status/",
     "icon": "https://icons.duckduckgo.com/ip3/lzhs1995.github.io.ico",
     "slug": "custom-status-shell",
-    "status": "up",
+    "status": "down",
     "uptime": "100.00%",
     "uptimeDay": "100.00%",
     "uptimeWeek": "100.00%",
     "uptimeMonth": "100.00%",
     "uptimeYear": "100.00%",
-    "time": 108,
-    "timeDay": 108,
-    "timeWeek": 108,
-    "timeMonth": 108,
-    "timeYear": 108,
+    "time": 75,
+    "timeDay": 75,
+    "timeWeek": 75,
+    "timeMonth": 75,
+    "timeYear": 75,
     "dailyMinutesDown": {}
   }
 ]
