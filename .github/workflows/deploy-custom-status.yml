@@ -10,6 +10,14 @@ on:
     paths:
       - "custom-status/**"
       - ".github/workflows/deploy-custom-status.yml"
+  # Upptime Static Site CI 每日 01:00 UTC 会整包覆盖 gh-pages，需在之后重新合并 custom-status/
+  workflow_run:
+    workflows: ["Static Site CI"]
+    types:
+      - completed
+    branches:
+      - master
+      - main
   workflow_dispatch:
 
 permissions:
@@ -24,6 +32,7 @@ jobs:
   deploy:
     name: Merge custom-status into gh-pages
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout source
         uses: actions/checkout@v5
